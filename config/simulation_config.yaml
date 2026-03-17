@@ -1,0 +1,197 @@
+# Electrolyser Simulation Configuration
+# This file contains all configurable parameters for the digital twin simulation
+
+simulation:
+  timestep: 1.0  # seconds
+  duration: 3600  # seconds (1 hour default)
+  random_seed: 42  # for reproducibility
+  fast_day_period: 600.0  # seconds (simulated day cycle)
+
+electrolyser:
+  # Physical constants
+  faraday_constant: 96485.33212  # C/mol
+  reversible_voltage: 1.23  # V per cell
+  n_cells: 5
+  ohmic_resistance: 0.4  # ohm per cell
+  
+  # Operating parameters
+  reference_current: 1.8  # A (desired stack current)
+  max_voltage_per_cell: 2.2  # V (trip threshold)
+  min_water_flow: 0.5  # L/min
+  
+  # Tank parameters
+  tank_volume: 0.05  # m³ (50 liters)
+  tank_temperature: 298.15  # K (25°C)
+  gas_constant: 8.31446261815324  # J/(mol·K)
+  atmospheric_pressure: 101325.0  # Pa
+  
+  # Efficiency and variation
+  faraday_efficiency: 0.95
+  efficiency_variation_range: [0.95, 1.05]
+  resistance_variation_range: [0.95, 1.05]
+  voltage_variation_range: [0.98, 1.02]
+
+pv_system:
+  # PV panel parameters
+  panel_isc_per_panel: 5.0  # A at 1000 W/m²
+  panel_voltage: 40.0  # V
+  derate_factor: 0.9  # 10% losses
+  
+  # Irradiance parameters
+  base_irradiance: 500.0  # W/m²
+  max_irradiance: 1000.0  # W/m²
+  irradiance_noise_range: [-80, 80]  # W/m²
+
+mqtt:
+  broker_host: "127.0.0.1"
+  broker_port: 8883
+  keepalive: 30
+  qos: 1
+  topic_prefix: "electrolyser/plant-A"
+
+faults:
+  # Fault injection parameters
+  definitions:
+    membrane_pinhole:
+      id: 1
+      severity_levels: [0.3, 0.5, 0.8]  # mild, moderate, severe
+      cell_voltage_increase: [0.3, 0.5, 0.8]  # V
+      h2_flow_multiplier: [1.1, 1.2, 1.3]
+      
+    gas_crossover:
+      id: 2
+      severity_levels: [0.3, 0.5, 0.8]
+      h2_o2_ratio: [2.1, 2.3, 2.5]  # normal is 2.0
+      
+    cell_flooding:
+      id: 3
+      severity_levels: [0.3, 0.5, 0.8]
+      cell_voltage_drop: [1.45, 1.38, 1.30]  # V
+      affected_cells: [2, 3]
+      
+    cell_dryout:
+      id: 4
+      severity_levels: [0.3, 0.5, 0.8]
+      cell_voltage_increase: [2.25, 2.35, 2.50]  # V
+      temp_rise_rate: [3.0, 5.0, 8.0]  # °C per second
+      
+    pump_failure:
+      id: 5
+      severity_levels: [0.3, 0.5, 0.8]
+      water_flow_multiplier: [0.5, 0.2, 0.0]
+      temp_rise_rate: [1.0, 2.0, 3.0]
+      
+    dcdc_failure:
+      id: 6
+      severity_levels: [0.3, 0.5, 0.8]
+      current_multiplier: [0.5, 0.2, 0.0]
+      
+    solar_transient:
+      id: 7
+      severity_levels: [0.3, 0.5, 0.8]
+      current_spike: [500, 650, 800]  # A
+      spike_duration: 0.5  # seconds
+      
+    level_sensor:
+      id: 8
+      severity_levels: [0.3, 0.5, 0.8]
+      pressure_noise: [1.0, 2.0, 3.0]  # bar
+      
+    irradiance_drift:
+      id: 9
+      severity_levels: [0.3, 0.5, 0.8]
+      drift_amount: [200, 300, 400]  # W/m²
+      
+    voltage_sensor_drift:
+      id: 10
+      severity_levels: [0.3, 0.5, 0.8]
+      affected_cell: 5
+      drift_value: 0.0  # stuck at zero
+      
+    temp_sensor_failure:
+      id: 11
+      severity_levels: [0.3, 0.5, 0.8]
+      failure_value: 0.0  # stuck at zero
+      
+    loose_bolt:
+      id: 12
+      severity_levels: [0.3, 0.5, 0.8]
+      current_reduction: [0.85, 0.75, 0.65]
+      
+    o2_blockage:
+      id: 13
+      severity_levels: [0.3, 0.5, 0.8]
+      o2_flow_multiplier: [0.5, 0.2, 0.1]
+      pressure_rise_rate: [0.3, 0.5, 0.8]  # bar per second
+      
+    telemetry_dropout:
+      id: 14
+      severity_levels: [0.3, 0.5, 0.8]
+      dropout_probability: [0.3, 0.6, 0.9]
+      
+    over_pressure:
+      id: 15
+      severity_levels: [0.3, 0.5, 0.8]
+      pressure_spike: [35, 40, 45]  # bar
+
+data_generation:
+  # Parameters for ML dataset generation
+  num_runs: 100  # number of simulation runs
+  run_duration: 7200  # seconds (2 hours per run)
+  fault_injection_probability: 0.3  # 30% of runs have faults
+  fault_start_time_range: [600, 5400]  # inject between 10min and 90min
+  output_format: "parquet"  # or "csv"
+  output_dir: "data/generated"
+  
+  # Noise and variation
+  sensor_noise_std: 0.02  # 2% standard deviation
+  environmental_variation: true
+  
+ml:
+  # Machine Learning configuration
+  random_seed: 42
+  test_size: 0.2
+  validation_size: 0.1
+  
+  # Feature engineering
+  window_sizes: [10, 30, 60]  # seconds for rolling statistics
+  features:
+    - mean
+    - std
+    - min
+    - max
+    - slope
+    - skewness
+    - kurtosis
+  
+  # Early prediction
+  prediction_horizons: [30, 60, 120, 300]  # seconds ahead
+  
+  # Model parameters
+  xgboost:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    
+  lstm:
+    hidden_size: 64
+    num_layers: 2
+    dropout: 0.2
+    sequence_length: 60
+    batch_size: 32
+    epochs: 50
+    learning_rate: 0.001
+
+experiments:
+  # Experiment configuration
+  output_dir: "research/results"
+  save_plots: true
+  save_metrics: true
+  
+  # Experiments to run
+  baseline_comparison: true
+  early_detection_analysis: true
+  noise_robustness: true
+  generalization_test: true
+
+# Made with Bob

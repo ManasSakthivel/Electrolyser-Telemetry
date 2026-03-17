@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-scada-bg: #0f172a;
+  --color-scada-card: rgba(30, 41, 59, 0.7);
+  /* Transparent for glass */
+  --color-scada-text: #f8fafc;
+  --color-scada-text-dim: #94a3b8;
+  --color-h2-color: #a855f7;
+  --color-o2-color: #06b6d4;
+  --color-water-color: #3b82f6;
+  --color-status-ok: #22c55e;
+  --color-status-warn: #f59e0b;
+  --color-status-err: #ef4444;
+
+  --font-sans: 'Inter', sans-serif;
+
+  --animate-flow-fast: flow 1s linear infinite;
+  --animate-flow-med: flow 2s linear infinite;
+  --animate-flow-slow: flow 4s linear infinite;
+  --animate-spin-slow: spin 3s linear infinite;
+
+  @keyframes flow {
+    0% {
+      stroke-dashoffset: 20;
+    }
+
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+body {
+  @apply bg-scada-bg text-scada-text font-sans;
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+.glass-panel {
+  @apply backdrop-blur-md border border-white/10 shadow-xl;
+}
+
+.neon-green {
+  box-shadow: 0 0 10px var(--color-status-ok), 0 0 20px var(--color-status-ok);
+}
+
+.neon-red {
+  box-shadow: 0 0 10px var(--color-status-err), 0 0 20px var(--color-status-err);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-scada-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-600;
+}

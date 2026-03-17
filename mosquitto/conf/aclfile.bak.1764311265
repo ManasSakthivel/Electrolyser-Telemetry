@@ -1,0 +1,66 @@
+user monitor-local
+topic read electrolyser/#
+
+user telegraf-subscriber
+topic read electrolyser/#
+# Auto-generated ACL entries - keep above this line
+# Generated at: Fri Nov 28 02:43:38 UTC 2025
+user sensor-EL1-cell_1_voltage
+topic write electrolyser/plant-A/EL1/cell/1/voltage
+user sensor-EL1-cell_2_voltage
+topic write electrolyser/plant-A/EL1/cell/2/voltage
+user sensor-EL1-cell_3_voltage
+topic write electrolyser/plant-A/EL1/cell/3/voltage
+user sensor-EL1-cell_4_voltage
+topic write electrolyser/plant-A/EL1/cell/4/voltage
+user sensor-EL1-cell_5_voltage
+topic write electrolyser/plant-A/EL1/cell/5/voltage
+user sensor-EL1-stack_current
+topic write electrolyser/plant-A/EL1/stack/current
+user sensor-EL1-stack_temperature
+topic write electrolyser/plant-A/EL1/stack/temperature
+user sensor-EL1-stack_pressure
+topic write electrolyser/plant-A/EL1/stack/pressure
+user sensor-EL1-h2_flow_rate
+topic write electrolyser/plant-A/EL1/h2/flow_rate
+user sensor-EL1-o2_flow_rate
+topic write electrolyser/plant-A/EL1/o2/flow_rate
+user sensor-EL1-tank_pressure
+topic write electrolyser/plant-A/EL1/tank/pressure
+user sensor-EL1-water_flow
+topic write electrolyser/plant-A/EL1/water_flow
+user sensor-EL2-cell_1_voltage
+topic write electrolyser/plant-A/EL2/cell/1/voltage
+user sensor-EL2-cell_2_voltage
+topic write electrolyser/plant-A/EL2/cell/2/voltage
+user sensor-EL2-cell_3_voltage
+topic write electrolyser/plant-A/EL2/cell/3/voltage
+user sensor-EL2-cell_4_voltage
+topic write electrolyser/plant-A/EL2/cell/4/voltage
+user sensor-EL2-cell_5_voltage
+topic write electrolyser/plant-A/EL2/cell/5/voltage
+user sensor-EL2-stack_current
+topic write electrolyser/plant-A/EL2/stack/current
+user sensor-EL2-stack_temperature
+topic write electrolyser/plant-A/EL2/stack/temperature
+user sensor-EL2-stack_pressure
+topic write electrolyser/plant-A/EL2/stack/pressure
+user sensor-EL2-h2_flow_rate
+topic write electrolyser/plant-A/EL2/h2/flow_rate
+user sensor-EL2-o2_flow_rate
+topic write electrolyser/plant-A/EL2/o2/flow_rate
+user sensor-EL2-tank_pressure
+topic write electrolyser/plant-A/EL2/tank/pressure
+user sensor-EL2-water_flow
+topic write electrolyser/plant-A/EL2/water_flow
+user sensor-plant-A-irradiance_1
+topic write electrolyser/plant-A/irradiance/1
+user sensor-plant-A-irradiance_2
+topic write electrolyser/plant-A/irradiance/2
+
+# monitoring / telegraf read access
+user telegraf-subscriber
+topic read electrolyser/plant-A/#
+
+user monitor-local
+topic read electrolyser/#

@@ -1,0 +1,78 @@
+version: "3.8"
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "8883:8883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/conf:/mosquitto/config:rw
+      - ./mosquitto/data:/mosquitto/data
+      - ./certs/ca/ca.crt:/mosquitto/certs/ca.crt:ro
+      - ./certs/broker/broker.crt:/mosquitto/certs/broker.crt:ro
+      - ./certs/broker/broker.key:/mosquitto/certs/broker.key:ro
+    environment:
+      - MOSQUITTO_ALLOW_ANONYMOUS=false
+    networks:
+      telemetry_net:
+        aliases:
+          - broker
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminadmin
+      - DOCKER_INFLUXDB_INIT_ORG=rvce
+      - DOCKER_INFLUXDB_INIT_BUCKET=electrolyser
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=dev-token-please-change
+    volumes:
+      - ./influxdb:/var/lib/influxdb2
+    networks: [telemetry_net]
+
+  telegraf:
+    image: telegraf:1.31
+    container_name: telegraf
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+      - influxdb
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      # mount certs for mTLS (make sure paths exist)
+      - ./certs/ca/ca.crt:/mosq-certs/ca.crt:ro
+      - ./certs/clients/telegraf-subscriber/client.crt:/mosq-certs/client.crt:ro
+      - ./certs/clients/telegraf-subscriber/client.key:/mosq-certs/client.key:ro
+    environment:
+      - INFLUX_TOKEN=dev-token-please-change
+      - INFLUX_ORG=rvce
+      - INFLUX_BUCKET=electrolyser
+    networks: [telemetry_net]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks: [telemetry_net]
+networks:
+  telemetry_net:
+    driver: bridge
+

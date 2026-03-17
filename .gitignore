@@ -1,0 +1,97 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.log.*
+installation.log
+
+# Data & Results (large files)
+data/generated/*.parquet
+data/generated/*.csv
+research/results/*.png
+research/results/*.json
+research/results/*.txt
+ml/models/*.joblib
+ml/models/*.pkl
+
+# Keep example results
+!examples/sample_results/
+
+# Temporary files
+*.tmp
+*.cache
+*.bak
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project-specific
+mosquitto/data/
+mosquitto/log/
+certs/*.pem
+certs/*.key
+certs/*.crt
+telegraf/data/
+
+# Cleanup artifacts
+INSTALLATION_STATUS.md
+INSTALLATION_GUIDE.md
+TRANSFORMATION_SUMMARY.md
+REVIEWER_PROOF_SUMMARY.md
+PUBLICATION_READINESS.md
+README_VALIDATION.md
+EDT_FIX_SUMMARY.md
+REPOSITORY_CLEANUP_PLAN.md
+verify_installation.py
+run_corrected_pipeline.sh
+run_full_pipeline.sh
+run_validation_suite.sh
+=1.11.0
