@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ElectrolyserTelemetryPayload",
+  "description": "JSON schema for every sensor message published over MQTT in the electrolyser telemetry system.",
+  "type": "object",
+  "required": ["ts", "site_id", "stack_id", "sensor_id", "metrics", "quality"],
+  "additionalProperties": false,
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp of measurement (e.g. 2025-01-01T00:00:00.000Z)"
+    },
+    "site_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique plant/site identifier (e.g. rvce-plant-A)"
+    },
+    "stack_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Electrolyser stack identifier (e.g. EL1, EL2)"
+    },
+    "sensor_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Sensor name (e.g. cell_1_voltage, stack_current, h2_purity)"
+    },
+    "cell": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Cell number for per-cell sensors. Null for stack-level sensors."
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "number",
+          "description": "Numeric measurement value"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Engineering unit (V, A, bar, °C, L/min, W/m², %)"
+        },
+        "raw": {
+          "type": ["number", "null"],
+          "description": "Optional raw ADC/register value before calibration"
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": ["qos", "status", "seq"],
+      "additionalProperties": false,
+      "properties": {
+        "qos": {
+          "type": "integer",
+          "enum": [0, 1, 2],
+          "description": "MQTT QoS level used for this message"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["OK", "WARN", "ERROR", "STALE", "FAULT"],
+          "description": "Data quality status flag"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Monotonically increasing sequence number per sensor"
+        }
+      }
+    },
+    "fault_active": {
+      "type": ["boolean", "null"],
+      "description": "True when a fault is actively injected on this sensor's channel"
+    }
+  }
+}

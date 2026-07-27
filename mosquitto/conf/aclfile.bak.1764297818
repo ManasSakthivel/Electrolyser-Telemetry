@@ -1,0 +1,5 @@
+user monitor-local
+topic read electrolyser/#
+
+user telegraf-subscriber
+topic read electrolyser/#

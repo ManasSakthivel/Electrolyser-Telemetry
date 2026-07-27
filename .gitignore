@@ -1,0 +1,98 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+env/
+venv/
+pip-log.txt
+*.egg-info/
+
+# macOS / system
+.DS_Store
+Thumbs.db
+
+# IDEs / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Certs and keys (VERY IMPORTANT)
+certs/ca/*
+certs/broker/*
+certs/clients/*
+!certs/.gitkeep
+
+# You can keep an empty placeholder
+# touch certs/.gitkeep to preserve directory structure
+
+# Mosquitto runtime data & creds
+mosquitto/data/
+mosquitto/conf/pwfile
+mosquitto/conf/aclfile
+
+# Docker
+*.pid
+*.log
+docker-compose.override.yml
+
+# Test / load logs
+*.out
+*.log
+*.tmp
+*.jsonl
+
+# Coverage / pytest
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build or export artifacts
+dist/
+build/
+*.pdf
+*.csv
+
+# Grafana / Influx runtime volumes
+influxdb/
+grafana/
+volumes/
+
+# Environment and secrets
+.env
+.env.*
+*.token
+*.pem
+*.crt
+*.key
+
+# Temporary or experimental files
+scratch/
+notes/
+*.bak
+*.old
+*.orig
+backup_*/
+
+
+# Frontend / Web App
+web_simulation/node_modules/
+web_simulation/dist/
+web_simulation/.env
+web_simulation/.env.local
+web_simulation/.env.*.local
+web_backup/
+
+# Ruff cache
+.ruff_cache/
+
+# Generated data artefacts (reproducible from make export-synthetic)
+data/*.parquet
+data/*.png
+data/*.json
+data/*.csv
+
+# Pytest cache
+tests/.pytest_cache/

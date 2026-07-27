@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    name: Python tests & lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r clients/python/requirements.txt
+
+      - name: Lint with ruff
+        run: |
+          pip install ruff
+          ruff check clients/python/ scripts/ tests/ --ignore E501
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results-${{ matrix.python-version }}
+          path: .pytest_cache/
+
+  schema-validate:
+    name: Validate JSON schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install jsonschema
+      - name: Validate schema file is valid JSON
+        run: python -c "import json; json.loads(open('schemas/telemetry_v1.json').read()); print('Schema OK')"
+
+  notebook-smoke:
+    name: Notebook smoke test (synthetic data)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas pyarrow scikit-learn matplotlib seaborn numpy torch shap \
+                      jupyter nbconvert scipy
+      - name: Generate synthetic dataset
+        run: |
+          python scripts/export_dataset.py --synthetic --rows 60 --out data/telemetry_labelled.parquet
+      - name: Validate physics model (three-term vs Koch et al.)
+        run: |
+          python scripts/validate_physics.py
+      - name: Execute notebook (smoke test)
+        run: |
+          jupyter nbconvert --to notebook --execute \
+            --ExecutePreprocessor.timeout=600 \
+            --output notebooks/anomaly_detection_executed.ipynb \
+            notebooks/anomaly_detection.ipynb
+      - name: Upload executed notebook
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-notebook
+          path: notebooks/anomaly_detection_executed.ipynb

@@ -1,0 +1,3 @@
+# Dataset export output directory
+# Parquet and CSV files produced by scripts/export_dataset.py are stored here.
+# Binary files are gitignored — see .gitignore.
