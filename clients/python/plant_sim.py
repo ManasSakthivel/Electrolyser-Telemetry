@@ -37,7 +37,6 @@ import random
 import ssl
 import time
 from threading import Event, Lock
-from typing import Dict, List, Optional, Tuple
 
 from paho.mqtt import client as mqtt
 
@@ -69,7 +68,7 @@ FAULT_O2_BLOCKAGE          = 13
 FAULT_TELEMETRY_DROPOUT    = 14
 FAULT_OVER_PRESSURE        = 15
 
-FAULT_NAMES: Dict[str, int] = {
+FAULT_NAMES: dict[str, int] = {
     "none":                 FAULT_NONE,
     "membrane_pinhole":     FAULT_MEMBRANE_PINHOLE,
     "gas_crossover":        FAULT_GAS_CROSSOVER,
@@ -178,7 +177,7 @@ class FaultInjector:
         with self._lock:
             return fault_id in self._active
 
-    def active_names(self) -> List[str]:
+    def active_names(self) -> list[str]:
         with self._lock:
             return [k for k, v in FAULT_NAMES.items() if v in self._active]
 
@@ -192,7 +191,7 @@ def _make_mqtt_client(
     cn: str,
     broker_host: str = "127.0.0.1",
     broker_port: int = 8883,
-    client_id: Optional[str] = None,
+    client_id: str | None = None,
 ) -> mqtt.Client:
     """Return a connected, loop-started MQTT client authenticated via X.509."""
     ca   = ROOT / "certs/ca/ca.crt"
@@ -233,7 +232,7 @@ class ElectrolyserTwin:
     """
 
     #: Sensor names that require one MQTT client each
-    SENSORS: List[Tuple[str, Optional[int]]] = [
+    SENSORS: list[tuple[str, int | None]] = [
         ("cell", 1), ("cell", 2), ("cell", 3), ("cell", 4), ("cell", 5),
         ("stack_current", None), ("stack_temperature", None),
         ("stack_pressure", None), ("h2_flow_rate", None),
@@ -251,7 +250,7 @@ class ElectrolyserTwin:
         # State variables
         self.I_stack:          float = 0.0
         self.V_stack:          float = self.N * self.U_rev
-        self.cell_voltages:    List[float] = [self.U_rev] * self.N
+        self.cell_voltages:    list[float] = [self.U_rev] * self.N
         self.stack_temp:       float = 45.0 + random.uniform(-1.0, 1.0)
         self.stack_pressure:   float = 1.2  + random.uniform(-0.05, 0.05)
         self.h2_flow_Lpm:      float = 0.0
@@ -262,12 +261,12 @@ class ElectrolyserTwin:
         self.tank_pressure_bar: float = ATM_PA / 1e5
 
         self.tripped:      bool = False
-        self.trip_reason:  Optional[str] = None
+        self.trip_reason:  str | None = None
         self.fault_injector = FaultInjector()
         self.fault_timer:  float = 0.0
         self.seq:          int = 0
 
-        self.clients: Dict[str, mqtt.Client] = {}
+        self.clients: dict[str, mqtt.Client] = {}
 
     # ── Connection management ─────────────────────────────────────────────
     def connect_clients(self, broker_host: str = "127.0.0.1", broker_port: int = 8883) -> None:
@@ -509,12 +508,12 @@ class PlantSimulator:
         self.broker_host = broker_host
         self.broker_port = broker_port
 
-        self.electrolysers: Dict[str, ElectrolyserTwin] = {
+        self.electrolysers: dict[str, ElectrolyserTwin] = {
             "EL1": ElectrolyserTwin("EL1"),
             "EL2": ElectrolyserTwin("EL2"),
         }
-        self.irradiance: Dict[int, float] = {1: 800.0, 2: 750.0}
-        self.irr_clients: Dict[int, mqtt.Client] = {}
+        self.irradiance: dict[int, float] = {1: 800.0, 2: 750.0}
+        self.irr_clients: dict[int, mqtt.Client] = {}
         self.stop_event = Event()
         self.t: float = 0.0
 

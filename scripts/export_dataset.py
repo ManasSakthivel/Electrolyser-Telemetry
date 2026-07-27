@@ -44,7 +44,6 @@ import pathlib
 import random
 import ssl
 import time
-from typing import Dict, List, Optional
 
 import pandas as pd
 import pyarrow as pa
@@ -226,7 +225,7 @@ def generate_synthetic_dataset(
     """
     random.seed(seed)
     electrolysers = ["EL1", "EL2"] if el == "both" else [el]
-    all_rows: List[dict] = []
+    all_rows: list[dict] = []
 
     for el_id in electrolysers:
         t = time.time()
@@ -275,13 +274,13 @@ class TelemetryCollector:
     def __init__(self, duration_s: float) -> None:
         self.duration = duration_s
         self.start_time = time.time()
-        self.rows: List[dict] = []
+        self.rows: list[dict] = []
 
-        self._buf: Dict[str, Dict[str, Optional[float]]] = {
+        self._buf: dict[str, dict[str, float | None]] = {
             el: {f: None for f in FEATURES} for el in ("EL1", "EL2")
         }
-        self._fault_labels: Dict[str, str] = {"EL1": "normal", "EL2": "normal"}
-        self._ts: Dict[str, float] = {"EL1": 0.0, "EL2": 0.0}
+        self._fault_labels: dict[str, str] = {"EL1": "normal", "EL2": "normal"}
+        self._ts: dict[str, float] = {"EL1": 0.0, "EL2": 0.0}
 
     def handle_message(self, topic: str, raw: bytes) -> None:
         try:

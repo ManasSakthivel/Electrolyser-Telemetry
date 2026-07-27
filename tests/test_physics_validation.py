@@ -23,7 +23,7 @@ _mock.patch.dict("sys.modules", {
     "paho.mqtt.client": _mock.MagicMock(),
 }).start()
 
-from plant_sim import ALPHA, FARADAY, R_GAS, TANK_TEMP_K, U_REV  # noqa: E402
+from plant_sim import ALPHA, FARADAY, R_GAS, TANK_TEMP_K, U_REV
 
 # ── Reference-calibrated parameters (same as validate_physics.py) ─────────────
 # Grid-optimised to minimise RMSE across both Monopoli et al. and NREL datasets.
@@ -94,7 +94,7 @@ class TestTelemetryTypes:
     def test_from_dict_valid(self):
         import sys
         sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "clients" / "python"))
-        from telemetry_types import TelemetryPayload, TelemetryMetrics, TelemetryQuality
+        from telemetry_types import TelemetryPayload
         p = TelemetryPayload.from_dict({
             "ts": "2025-01-01T00:00:00Z",
             "site_id": "rvce-plant-A",

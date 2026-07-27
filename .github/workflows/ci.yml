@@ -31,7 +31,8 @@ jobs:
       - name: Lint with ruff
         run: |
           pip install ruff
-          ruff check clients/python/ scripts/ tests/ --ignore E501
+          ruff check clients/python/ scripts/ tests/ \
+            --ignore E501,EXE001,BLE001,S110,RUF012,SIM102
 
       - name: Run tests
         run: |

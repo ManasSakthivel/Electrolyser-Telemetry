@@ -13,9 +13,7 @@ telemetry system.  These types serve three purposes:
 
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass, field, asdict
-from typing import List, Optional
+from dataclasses import asdict, dataclass
 
 
 @dataclass(frozen=True)
@@ -37,7 +35,7 @@ class TelemetryMetrics:
     """Measured value and engineering unit."""
     value: float
     unit:  str
-    raw:   Optional[float] = None  # optional pre-calibration raw reading
+    raw:   float | None = None  # optional pre-calibration raw reading
 
 
 @dataclass
@@ -54,11 +52,11 @@ class TelemetryPayload:
     sensor_id: str              # e.g. "cell_1_voltage"
     metrics:   TelemetryMetrics
     quality:   TelemetryQuality
-    cell:      Optional[int]    = None   # 1-5 for per-cell sensors, else None
-    fault_active: Optional[bool] = None
+    cell:      int | None    = None   # 1-5 for per-cell sensors, else None
+    fault_active: bool | None = None
 
     @classmethod
-    def from_dict(cls, d: dict) -> "TelemetryPayload":
+    def from_dict(cls, d: dict) -> TelemetryPayload:
         """Deserialise from a raw JSON-parsed dict.  Raises ``KeyError`` on missing fields."""
         return cls(
             ts        = d["ts"],

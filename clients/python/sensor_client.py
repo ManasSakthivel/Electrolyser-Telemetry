@@ -25,7 +25,6 @@ import pathlib
 import random
 import ssl
 import time
-from typing import Optional
 
 from paho.mqtt import client as mqtt
 
@@ -62,7 +61,7 @@ def generate_value(el: str, sensor: str) -> float:
 
 
 # ── Topic resolution ──────────────────────────────────────────────────────────
-def resolve_topic(el: str, sensor: str, cell: Optional[int] = None) -> str:
+def resolve_topic(el: str, sensor: str, cell: int | None = None) -> str:
     """Map (el, sensor, cell) to the canonical MQTT topic path."""
     base = "electrolyser/plant-A"
     if sensor.startswith("irradiance"):

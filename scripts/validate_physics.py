@@ -44,7 +44,6 @@ import json
 import math
 import pathlib
 import sys
-from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,13 +56,14 @@ except ImportError:
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "clients" / "python"))
 import unittest.mock as _mock
+
 _mock.patch.dict("sys.modules", {
     "paho": _mock.MagicMock(),
     "paho.mqtt": _mock.MagicMock(),
     "paho.mqtt.client": _mock.MagicMock(),
 }).start()
 
-from plant_sim import ALPHA, FARADAY, R_GAS, TANK_TEMP_K, U_REV  # noqa: E402
+from plant_sim import ALPHA, FARADAY, R_GAS, TANK_TEMP_K, U_REV
 
 ROOT    = pathlib.Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data"
@@ -81,20 +81,20 @@ I0_REF:    float = 0.010   # A       (fitted exchange current density)
 I_LIM_REF: float = 4.0     # A       (fitted limiting current density — mass transport)
 
 # ── Reference training data (Monopoli et al. 2024 + NREL 2020) ───────────────
-MONOPOLI_REFERENCE: List[Tuple[float, float]] = [
+MONOPOLI_REFERENCE: list[tuple[float, float]] = [
     (0.0, 1.23), (0.2, 1.48), (0.4, 1.56), (0.6, 1.62), (0.8, 1.67),
     (1.0, 1.72), (1.2, 1.76), (1.4, 1.80), (1.6, 1.84), (1.8, 1.88),
     (2.0, 1.92), (2.2, 1.97), (2.4, 2.02), (2.6, 2.08), (2.8, 2.14),
     (3.0, 2.21),
 ]
-NREL_REFERENCE: List[Tuple[float, float]] = [
+NREL_REFERENCE: list[tuple[float, float]] = [
     (0.5, 1.58), (1.0, 1.71), (1.5, 1.82), (2.0, 1.94), (2.5, 2.07),
 ]
 
 # ── Koch et al. 2024 independent validation data ──────────────────────────────
 # Digitised from Koch, Papantonis, Hannemann, Data in Brief, vol. 52, 2024.
 # Cell: 25 cm² MEA, Nafion 117, 25 °C, 1 bar abs — INDEPENDENT of training data.
-KOCH_REFERENCE: List[Tuple[float, float]] = [
+KOCH_REFERENCE: list[tuple[float, float]] = [
     (0.3, 1.52), (0.6, 1.61), (0.9, 1.69), (1.2, 1.76),
     (1.5, 1.83), (1.8, 1.90), (2.1, 1.98), (2.4, 2.07),
     (2.7, 2.18), (3.0, 2.31),
@@ -134,15 +134,15 @@ def ohmic_only(i: float, r_ohm: float = R_OHM_REF) -> float:
     return U_REV + r_ohm * i
 
 
-def rmse(ref: List[Tuple[float, float]], fn) -> float:
+def rmse(ref: list[tuple[float, float]], fn) -> float:
     return math.sqrt(sum((fn(i) - v) ** 2 for i, v in ref) / len(ref))
 
 
 # ── Parameter fitting ─────────────────────────────────────────────────────────
 
 def fit_parameters(
-    ref_data: List[Tuple[float, float]],
-) -> Tuple[float, float, float]:
+    ref_data: list[tuple[float, float]],
+) -> tuple[float, float, float]:
     """
     Fit (R_ohm, I0, I_lim) to minimise RMSE on ref_data using scipy.
     Falls back to the hard-coded reference values if scipy is unavailable.
@@ -181,9 +181,9 @@ def plot_comparison(r_ohm: float, i0: float, i_lim: float) -> dict:
     v_ohm   = np.array([ohmic_only(i, r_ohm) for i in currents])
 
     # RMSE on training reference (Monopoli + NREL)
-    fn3 = lambda i: bv_ohmic_three_term(i, r_ohm, i0, i_lim)  # noqa: E731
-    fn2 = lambda i: bv_ohmic_two_term(i, r_ohm, i0)            # noqa: E731
-    fn1 = lambda i: ohmic_only(i, r_ohm)                       # noqa: E731
+    fn3 = lambda i: bv_ohmic_three_term(i, r_ohm, i0, i_lim)
+    fn2 = lambda i: bv_ohmic_two_term(i, r_ohm, i0)
+    fn1 = lambda i: ohmic_only(i, r_ohm)
 
     rmse_3_mono = rmse(MONOPOLI_REFERENCE, fn3)
     rmse_3_nrel = rmse(NREL_REFERENCE,     fn3)
@@ -193,7 +193,7 @@ def plot_comparison(r_ohm: float, i0: float, i_lim: float) -> dict:
     # RMSE on Koch et al. — independent validation (not used during fitting)
     rmse_3_koch = rmse(KOCH_REFERENCE, fn3)
 
-    fig, ax = plt.subplots(figsize=(10, 7))
+    _fig, ax = plt.subplots(figsize=(10, 7))
     ax.plot(currents, v_three, color="steelblue",  lw=2.5,
             label=f"Three-term BV + Conc + Ohmic  RMSE={rmse_3_mono:.4f} V (Monopoli)")
     ax.plot(currents, v_two,   color="darkorange",  lw=1.8, ls="-.",

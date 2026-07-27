@@ -47,7 +47,6 @@ import ssl
 import statistics
 import time
 from threading import Event
-from typing import List
 
 import matplotlib.pyplot as plt
 from paho.mqtt import client as mqtt
@@ -76,7 +75,7 @@ def _make_client(cn: str, broker: str, port: int, client_id: str) -> mqtt.Client
     return c
 
 
-def percentile(data: List[float], p: float) -> float:
+def percentile(data: list[float], p: float) -> float:
     """Return the p-th percentile of a sorted list."""
     if not data:
         return float("nan")
@@ -91,7 +90,7 @@ def percentile(data: List[float], p: float) -> float:
 def run_benchmark(n: int, broker: str, port: int) -> dict:
     TOPIC_BENCH = "electrolyser/plant-A/_benchmark/latency"
 
-    latencies_ms: List[float] = []
+    latencies_ms: list[float] = []
     received = Event()
     _last_payload: dict = {}
 
@@ -149,8 +148,8 @@ def run_benchmark(n: int, broker: str, port: int) -> dict:
     return report, latencies_ms
 
 
-def save_histogram(latencies_ms: List[float], out_dir: pathlib.Path) -> None:
-    fig, ax = plt.subplots(figsize=(9, 5))
+def save_histogram(latencies_ms: list[float], out_dir: pathlib.Path) -> None:
+    _fig, ax = plt.subplots(figsize=(9, 5))
     ax.hist(latencies_ms, bins=40, color="steelblue", edgecolor="white", linewidth=0.4)
     p95 = percentile(latencies_ms, 95)
     p99 = percentile(latencies_ms, 99)

@@ -42,14 +42,13 @@ import math
 import pathlib
 import random
 import sys
-from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-from torch import nn
 from sklearn.preprocessing import StandardScaler
+from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 # Locate project root and reuse the export_dataset helpers
@@ -79,7 +78,7 @@ FEATURES = [
 ]
 
 # Hard-coded threshold-based alarm rules (mirrors safety checks in plant_sim.py)
-ALARM_RULES: Dict[str, callable] = {
+ALARM_RULES: dict[str, callable] = {
     "cell_dryout":          lambda r: any(r.get(f"cell_{i}_voltage", 0) > 2.2 for i in range(1, 6)),
     "pump_failure":         lambda r: r.get("water_flow", 1) < 0.05,
     "over_pressure":        lambda r: r.get("tank_pressure", 0) > 30.0,
@@ -107,11 +106,11 @@ FAULT_CLASSES = [
 
 # ── Inline row generator ──────────────────────────────────────────────────────
 
-def _make_row(k: int, fault: Optional[str] = None,
+def _make_row(k: int, fault: str | None = None,
               r_ohm: float = 0.4, eta_f: float = 0.95) -> dict:
     irr     = 500.0 + 400.0 * math.sin(2 * math.pi * k / 600.0)
     i_stack = 1.8 * (irr / 1000.0)
-    n       = lambda s=0.02: random.uniform(-s, s)  # noqa: E731
+    n       = lambda s=0.02: random.uniform(-s, s)
     cells   = [round(_cell_voltage(i_stack, r_ohm=r_ohm * random.uniform(0.97, 1.03)) + n(), 4)
                for _ in range(5)]
     h2      = round(max(0.0, i_stack * 0.22 * eta_f / 0.95 + n(0.01)), 4)
@@ -172,7 +171,7 @@ def _make_row(k: int, fault: Optional[str] = None,
 
 
 def _generate_trace(fault: str, n_normal: int = 300, n_fault: int = 300,
-                    seed: int = 42) -> Tuple[List[dict], List[int]]:
+                    seed: int = 42) -> tuple[list[dict], list[int]]:
     """Generate a (n_normal + n_fault) row trace with a hard fault onset."""
     random.seed(seed)
     r_ohm = max(0.25, random.gauss(0.4, 0.06))
@@ -201,7 +200,7 @@ class LSTMAutoencoder(nn.Module):
 
 
 def _train_lstm(X_normal: np.ndarray, window: int = 30,
-                epochs: int = 30, batch: int = 64) -> Tuple[LSTMAutoencoder, float]:
+                epochs: int = 30, batch: int = 64) -> tuple[LSTMAutoencoder, float]:
     """Train LSTM Autoencoder on normal windows; return model and threshold."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     seqs = []
@@ -238,8 +237,8 @@ def _train_lstm(X_normal: np.ndarray, window: int = 30,
 
 
 def _detection_tick(model: LSTMAutoencoder, scaler: StandardScaler,
-                    rows: List[dict], threshold: float,
-                    window: int = 30) -> Optional[int]:
+                    rows: list[dict], threshold: float,
+                    window: int = 30) -> int | None:
     """Return the first tick (row index) where LSTM reconstruction error > threshold."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     X = scaler.transform(pd.DataFrame(rows)[FEATURES].fillna(0).values.astype(np.float32))
@@ -253,7 +252,7 @@ def _detection_tick(model: LSTMAutoencoder, scaler: StandardScaler,
     return None
 
 
-def _alarm_tick(rows: List[dict], fault: str) -> Optional[int]:
+def _alarm_tick(rows: list[dict], fault: str) -> int | None:
     """Return the first tick where the rule-based threshold alarm fires."""
     rule = ALARM_RULES.get(fault)
     if rule is None:
@@ -271,7 +270,7 @@ def _alarm_tick(rows: List[dict], fault: str) -> Optional[int]:
 
 def run_experiment(n_normal: int = 300, n_fault: int = 300,
                    window: int = 30, epochs: int = 30,
-                   seed: int = 42) -> List[dict]:
+                   seed: int = 42) -> list[dict]:
     """Run the lead-time experiment for all fault classes."""
     print("Generating normal training data for LSTM …")
     random.seed(seed)
@@ -322,7 +321,7 @@ def run_experiment(n_normal: int = 300, n_fault: int = 300,
     return results
 
 
-def plot_results(results: List[dict], out_dir: pathlib.Path) -> None:
+def plot_results(results: list[dict], out_dir: pathlib.Path) -> None:
     """Bar chart of lead times per fault class."""
     valid = [r for r in results if r["lead_time_s"] is not None]
     if not valid:
@@ -332,7 +331,7 @@ def plot_results(results: List[dict], out_dir: pathlib.Path) -> None:
     faults    = [r["fault"].replace("_", "\n") for r in valid]
     lead_vals = [r["lead_time_s"] for r in valid]
 
-    fig, ax = plt.subplots(figsize=(13, 6))
+    _fig, ax = plt.subplots(figsize=(13, 6))
     colors = ["steelblue" if v >= 0 else "tomato" for v in lead_vals]
     bars = ax.bar(range(len(faults)), lead_vals, color=colors, edgecolor="white", linewidth=0.5)
     ax.axhline(0, color="black", lw=0.8, ls="--")

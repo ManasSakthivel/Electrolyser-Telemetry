@@ -19,6 +19,7 @@ import logging
 import pathlib
 import ssl
 import time
+
 from paho.mqtt import client as mqtt
 
 logging.basicConfig(

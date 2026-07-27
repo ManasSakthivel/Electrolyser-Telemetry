@@ -18,42 +18,30 @@ import pytest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "clients" / "python"))
 
 # Patch paho so we can import plant_sim without needing it installed during CI
-import unittest.mock as mock
+from unittest import mock
+
 sys.modules.setdefault("paho", mock.MagicMock())
 sys.modules.setdefault("paho.mqtt", mock.MagicMock())
 sys.modules.setdefault("paho.mqtt.client", mock.MagicMock())
 
-from plant_sim import (  # noqa: E402  (import after mock patch)
+from plant_sim import (
     ALPHA,
-    ATM_PA,
     FARADAY,
-    FAULT_CELL_DRYOUT,
-    FAULT_CELL_FLOODING,
-    FAULT_DCDC_FAILURE,
-    FAULT_GAS_CROSSOVER,
-    FAULT_LOOSE_BOLT,
     FAULT_MEMBRANE_PINHOLE,
     FAULT_NAMES,
-    FAULT_O2_BLOCKAGE,
-    FAULT_OVER_PRESSURE,
     FAULT_PUMP_FAILURE,
-    FAULT_TELEMETRY_DROPOUT,
-    FAULT_VOLTAGE_SENSOR_DRIFT,
     I_LIM,
     I_REF,
     N_CELLS,
     R_GAS,
     TANK_TEMP_K,
-    TANK_VOLUME_M3,
     U_REV,
     ElectrolyserTwin,
     FaultInjector,
     _activation_overpotential,
     _concentration_overpotential,
 )
-
-from sensor_client import generate_value, resolve_topic  # noqa: E402
-
+from sensor_client import generate_value, resolve_topic
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Physics helpers
@@ -312,7 +300,7 @@ class TestTelemetrySchema:
         import datetime
         schema, validate = self._schema()
         payload = {
-            "ts":        datetime.datetime.utcnow().isoformat() + "Z",
+            "ts":        datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
             "site_id":   "rvce-plant-A",
             "stack_id":  "EL1",
             "sensor_id": "cell_1_voltage",
