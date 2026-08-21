@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-54%20passed-brightgreen)](#running-tests)
 
-A production-grade **secure IoT telemetry and digital-twin platform** for monitoring green hydrogen electrolyser plants. The system spans five software layers — physics simulation, zero-trust security, time-series ingestion, real-time visualisation, and machine-learning fault detection — implemented entirely from first principles and integrated end-to-end in Docker.
+An IoT telemetry platform for monitoring green hydrogen electrolyser plants, built as a learning project in systems integration and ML. The system covers five layers — physics simulation, secured MQTT transport, time-series ingestion, real-time visualisation, and ML-based fault detection — all running in Docker.
 
 ---
 
