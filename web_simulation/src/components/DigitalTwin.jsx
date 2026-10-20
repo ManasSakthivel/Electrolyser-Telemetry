@@ -2,7 +2,7 @@ import React from 'react';
 import { Activity } from 'lucide-react';
 import ProcessSchematic from './ProcessSchematic';
 
-const DigitalTwin = ({ data }) => {
+const DigitalTwin = ({ data, demo = false }) => {
     const { EL1, EL2, PLANT } = data;
 
     return (
@@ -18,6 +18,11 @@ const DigitalTwin = ({ data }) => {
                             Electrolyser Plant A
                         </h1>
                         <span className="text-slate-400 font-normal text-sm">Real-time Telemetry & Control</span>
+                        {demo && (
+                            <span className="ml-2 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/50 text-amber-300 text-[10px] font-bold tracking-widest">
+                                SYNTHETIC DEMO DATA
+                            </span>
+                        )}
                     </div>
                 </div>
                 <div className="flex gap-6 bg-slate-900/50 p-3 rounded-xl border border-white/5">
