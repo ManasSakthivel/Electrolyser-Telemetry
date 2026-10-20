@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import pathlib
 import sys
+import tomllib
 
 import pytest
 
@@ -296,3 +297,8 @@ class TestTelegrafFieldMapping:
         # Check InfluxDB output bucket and org variables
         assert 'bucket       = "${INFLUX_BUCKET}"' in conf_str or 'bucket = "${INFLUX_BUCKET}"' in conf_str
         assert 'organization = "${INFLUX_ORG}"' in conf_str or 'organization = "${INFLUX_ORG}"' in conf_str
+
+    def test_telegraf_renames_metrics_value_to_value_field(self):
+        # Grafana panels filter on _field == "value"; the json parser emits metrics_value.
+        conf = tomllib.loads((ROOT / "telegraf" / "telegraf.conf").read_text())
+        assert {"field": "metrics_value", "dest": "value"} in conf["processors"]["rename"][0]["replace"]

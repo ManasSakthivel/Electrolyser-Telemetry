@@ -68,5 +68,5 @@ user ws_viewer
 topic read electrolyser/plant-A/#
 EOF
 
-chmod 700 "$ACLFILE"
+chmod 600 "$ACLFILE"
 echo "ACL generation complete; file: $ACLFILE"

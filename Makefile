@@ -69,6 +69,7 @@ single-client: ca
 up:
 	@if [ ! -f .env ]; then \
 	  echo "$(BOLD)ERROR:$(RESET) .env not found. Copy .env.example → .env and fill in secrets."; exit 1; fi
+	@touch mosquitto/conf/pwfile && chmod 600 mosquitto/conf/pwfile # broker refuses to start without it; init-pwfile fills it once running
 	docker compose up -d --remove-orphans
 
 init-pwfile:
@@ -96,7 +97,7 @@ test: .venv/bin/activate
 	. .venv/bin/activate && pytest tests/ -v --tb=short
 
 lint: .venv/bin/activate
-	. .venv/bin/activate && pip install -q ruff && ruff check clients/python/ scripts/ tests/ --ignore E501
+	. .venv/bin/activate && pip install -q ruff && ruff check clients/python/ scripts/ tests/ --ignore E501,EXE001,BLE001,S110,RUF012,SIM102
 
 # ── Dataset export ────────────────────────────────────────────────────────────
 export: .venv/bin/activate

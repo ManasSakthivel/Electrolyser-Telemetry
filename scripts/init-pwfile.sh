@@ -25,6 +25,8 @@ fi
 # Use the running mosquitto container's mosquitto_passwd binary so the hash
 # format matches the broker's expectation exactly.
 docker exec mosquitto mosquitto_passwd -b /mosquitto/config/pwfile "$MQTT_WS_USER" "$MQTT_WS_PASS"
+# mosquitto_passwd can rewrite the file with looser modes; the broker warns on world-readable pwfiles.
+chmod 600 "$(dirname "$0")/../mosquitto/conf/pwfile"
 echo "Password entry for '${MQTT_WS_USER}' written to mosquitto/conf/pwfile."
 echo "Send SIGHUP to reload: docker exec mosquitto kill -HUP 1"
 docker exec mosquitto kill -HUP 1

@@ -59,7 +59,7 @@
       "type": "row"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -82,7 +82,7 @@
       "options": { "tooltip": { "mode": "multi" } },
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"stack_id\"] == \"EL1\")\n  |> filter(fn: (r) => r[\"sensor_id\"] =~ /cell_[1-5]_voltage/)\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -91,7 +91,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -103,7 +103,7 @@
       "id": 2,
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"stack_id\"] == \"EL1\")\n  |> filter(fn: (r) => r[\"sensor_id\"] == \"stack_current\" or r[\"sensor_id\"] == \"h2_flow_rate\" or r[\"sensor_id\"] == \"o2_flow_rate\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -112,7 +112,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -124,7 +124,7 @@
       "id": 3,
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"stack_id\"] == \"EL1\")\n  |> filter(fn: (r) => r[\"sensor_id\"] == \"stack_temperature\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -133,7 +133,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -145,7 +145,7 @@
       "id": 4,
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"stack_id\"] == \"EL1\")\n  |> filter(fn: (r) => r[\"sensor_id\"] == \"stack_pressure\" or r[\"sensor_id\"] == \"tank_pressure\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -154,7 +154,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -166,7 +166,7 @@
       "id": 5,
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"stack_id\"] == \"EL1\")\n  |> filter(fn: (r) => r[\"sensor_id\"] == \"water_flow\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -182,7 +182,7 @@
       "type": "row"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -196,7 +196,7 @@
       "id": 6,
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"stack_id\"] == \"EL2\")\n  |> filter(fn: (r) => r[\"sensor_id\"] =~ /cell_[1-5]_voltage/)\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -205,7 +205,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -216,7 +216,7 @@
       "id": 7,
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"stack_id\"] == \"EL2\")\n  |> filter(fn: (r) => r[\"sensor_id\"] == \"stack_current\" or r[\"sensor_id\"] == \"h2_flow_rate\" or r[\"sensor_id\"] == \"o2_flow_rate\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -232,7 +232,7 @@
       "type": "row"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -244,7 +244,7 @@
       "id": 8,
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"stack_id\"] == \"PLANT\")\n  |> filter(fn: (r) => r[\"sensor_id\"] =~ /irradiance_[12]/)\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -253,7 +253,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -265,7 +265,7 @@
       "id": 9,
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "${DS_INFLUXDB_TELEMETRY}" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-telemetry" },
           "query": "from(bucket: \"${INFLUX_BUCKET}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electrolyser_sensor\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> aggregateWindow(every: 1m, fn: count, createEmpty: false)\n  |> sum()\n  |> yield(name: \"total_messages\")",
           "refId": "A"
         }

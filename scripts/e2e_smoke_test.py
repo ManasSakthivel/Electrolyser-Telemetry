@@ -63,19 +63,23 @@ def run_auth_and_acl_tests() -> bool:
     unauth_client.tls_set(ca_certs=str(CA_CERT), tls_version=ssl.PROTOCOL_TLS_CLIENT)
     unauth_client.tls_insecure_set(True)
 
-    connect_failed = False
+    unauth_connected = False
+
+    def on_unauth_connect(c, userdata, flags, reason_code, properties=None):
+        nonlocal unauth_connected
+        unauth_connected = getattr(reason_code, "value", reason_code) == 0
+
+    unauth_client.on_connect = on_unauth_connect
     try:
         unauth_client.connect(BROKER_HOST, BROKER_PORT, keepalive=5)
-        # Wait briefly for broker handshake rejection
+        # Give the broker time to send CONNACK if it were going to accept this client
         for _ in range(5):
             unauth_client.loop(timeout=0.2)
     except Exception as exc:
-        print(f"  ✓ Broker immediately refused unauthenticated connection: {exc}")
-        connect_failed = True
+        print(f"  (connection attempt raised {type(exc).__name__})")
 
-    if not connect_failed:
-        # Check if disconnected by broker
-        print("  ✓ Broker closed connection during TLS handshake (no client certificate)")
+    assert not unauth_connected, "Broker accepted an MQTT session without a client certificate"
+    print("  ✓ Broker rejected unauthenticated client (no CONNACK)")
 
     # 1.2 Authenticated client with valid cert should connect
     print("[1.2] Testing authorized client connection (sensor-EL1-cell_1_voltage)...")
@@ -130,10 +134,31 @@ def run_auth_and_acl_tests() -> bool:
 
     # 1.4 Test ACL violation: sensor-EL1-cell_1_voltage trying to publish to unauthorized topic
     print("[1.4] Testing ACL enforcement on unauthorized topic (electrolyser/plant-A/EL2/cell/1/voltage)...")
-    client_auth.publish("electrolyser/plant-A/EL2/cell/1/voltage", sample_payload, qos=1)
-    # The broker should not deliver/acknowledge or should drop under ACL
-    time.sleep(0.5)
-    print("  ✓ ACL boundary enforced for unauthorized topic path")
+    observed_topics: list[str] = []
+    monitor = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2 if hasattr(mqtt, "CallbackAPIVersion") else None, client_id="monitor-local-acl-check")
+    monitor.tls_set(
+        ca_certs=str(CA_CERT),
+        certfile=str(ROOT / "certs/clients/monitor-local/client.crt"),
+        keyfile=str(ROOT / "certs/clients/monitor-local/client.key"),
+        tls_version=ssl.PROTOCOL_TLS_CLIENT,
+    )
+    monitor.tls_insecure_set(True)
+    monitor.on_message = lambda c, u, m: observed_topics.append(m.topic)
+    monitor.connect(BROKER_HOST, BROKER_PORT, keepalive=10)
+    monitor.subscribe("electrolyser/plant-A/#", qos=1)
+    monitor.loop_start()
+    time.sleep(1.0)  # let the subscription become active
+
+    # Positive control: the authorized publish must reach the monitor, or the negative check proves nothing
+    client_auth.publish("electrolyser/plant-A/EL1/cell/1/voltage", sample_payload, qos=1).wait_for_publish(timeout=3.0)
+    client_auth.publish("electrolyser/plant-A/EL2/cell/1/voltage", sample_payload, qos=1).wait_for_publish(timeout=3.0)
+    time.sleep(1.0)
+    monitor.loop_stop()
+    monitor.disconnect()
+
+    assert "electrolyser/plant-A/EL1/cell/1/voltage" in observed_topics, "Monitor did not receive the authorized publish; ACL check is inconclusive"
+    assert "electrolyser/plant-A/EL2/cell/1/voltage" not in observed_topics, "ACL violation: unauthorized EL2 publish was routed to subscribers"
+    print("  ✓ Unauthorized EL2 publish was not routed; authorized EL1 publish was")
 
     client_auth.loop_stop()
     client_auth.disconnect()
@@ -263,6 +288,7 @@ def run_influxdb_query_test() -> bool:
     from(bucket: "{INFLUX_BUCKET}")
       |> range(start: -24h)
       |> filter(fn: (r) => r["_measurement"] == "electrolyser_sensor")
+      |> filter(fn: (r) => r["_field"] == "value")
       |> limit(n: 20)
     '''
 

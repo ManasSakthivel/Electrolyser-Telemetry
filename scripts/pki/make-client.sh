@@ -9,6 +9,7 @@ CADIR="$ROOT/certs/ca"
 CDIR="$ROOT/certs/clients/$CN"
 mkdir -p "$CDIR"
 openssl genrsa -out "$CDIR/client.key" 4096
+chmod 600 "$CDIR/client.key"
 openssl req -new -key "$CDIR/client.key" -out "$CDIR/client.csr" -subj "/C=IN/O=Electrolyser/CN=$CN"
 openssl x509 -req -in "$CDIR/client.csr" -CA "$CADIR/ca.crt" -CAkey "$CADIR/ca.key" -CAcreateserial \
   -out "$CDIR/client.crt" -days 825 -sha256

@@ -10,6 +10,7 @@ if [[ -f "$CADIR/ca.crt" && -f "$CADIR/ca.key" && "${FORCE:-0}" != "1" ]]; then
 fi
 
 openssl genrsa -out "$CADIR/ca.key" 4096
+chmod 600 "$CADIR/ca.key"
 openssl req -x509 -new -nodes -key "$CADIR/ca.key" -sha256 -days 3650 \
   -subj "/C=IN/O=Electrolyser CA/CN=Electrolyser-Root-CA" \
   -out "$CADIR/ca.crt"
