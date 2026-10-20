@@ -21,7 +21,12 @@ import ssl
 import threading
 from collections.abc import Callable
 
-from jsonschema import ValidationError, validate
+try:
+    from jsonschema import ValidationError, validate
+except ImportError:
+    ValidationError = Exception  # type: ignore[misc,assignment]
+    validate = None
+
 from paho.mqtt import client as mqtt
 from telemetry_types import TelemetryPayload
 
@@ -230,16 +235,16 @@ class TelemetryConsumer:
                 return True, "STATUS_PROCESSED"
 
         # 3. Schema validation against schemas/telemetry_v1.json
-        if self._schema is not None:
+        if self._schema is not None and validate is not None:
             try:
                 validate(data, self._schema)
             except ValidationError as exc:
                 with self._lock:
                     self.metrics["schema_errors"] += 1
-                log.warning("Schema validation error on %s: %s", topic, exc.message)
+                log.warning("Schema validation error on %s: %s", topic, getattr(exc, "message", str(exc)))
                 if self.on_error:
                     self.on_error("schema_validation", exc)
-                return False, f"SCHEMA_VALIDATION_ERROR: {exc.message}"
+                return False, f"SCHEMA_VALIDATION_ERROR: {getattr(exc, 'message', str(exc))}"
 
         # 4. Construct typed TelemetryPayload
         try:
