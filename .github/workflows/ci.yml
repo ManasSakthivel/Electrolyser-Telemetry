@@ -81,7 +81,7 @@ jobs:
         run: |
           jupyter nbconvert --to notebook --execute \
             --ExecutePreprocessor.timeout=600 \
-            --output notebooks/anomaly_detection_executed.ipynb \
+            --output anomaly_detection_executed.ipynb \
             notebooks/anomaly_detection.ipynb
       - name: Upload executed notebook
         if: always()
