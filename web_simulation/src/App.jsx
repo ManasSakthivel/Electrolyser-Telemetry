@@ -65,7 +65,9 @@ function App() {
 
       if (device === 'EL1' || device === 'EL2') {
         const s = { ...newState[device] };
-        const { sensor, value, cell } = payload;
+        const sensor = payload.sensor_id || payload.sensor || '';
+        const value = payload.metrics && typeof payload.metrics.value === 'number' ? payload.metrics.value : payload.value;
+        const cell = payload.cell;
 
         if (sensor.startsWith('cell_')) {
           s.cells = { ...s.cells, [cell]: value };
@@ -84,8 +86,10 @@ function App() {
         newState[device] = s;
       } else if (device === 'irradiance') {
         const p = { ...newState.PLANT };
-        if (payload.sensor === 'irradiance_1') p.irr1 = payload.value;
-        if (payload.sensor === 'irradiance_2') p.irr2 = payload.value;
+        const sensor = payload.sensor_id || payload.sensor || '';
+        const value = payload.metrics && typeof payload.metrics.value === 'number' ? payload.metrics.value : payload.value;
+        if (sensor === 'irradiance_1') p.irr1 = value;
+        if (sensor === 'irradiance_2') p.irr2 = value;
         newState.PLANT = p;
       }
 

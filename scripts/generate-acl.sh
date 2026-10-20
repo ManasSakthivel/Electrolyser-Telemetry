@@ -61,6 +61,8 @@ topic read electrolyser/plant-A/#
 
 user monitor-local
 topic read electrolyser/#
+topic write electrolyser/control/faults
+topic write electrolyser/plant-A/_benchmark/latency
 EOF
 
 chmod 700 "$ACLFILE"

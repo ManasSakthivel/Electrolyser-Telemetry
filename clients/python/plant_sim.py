@@ -29,6 +29,7 @@ Run
 
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 import math
@@ -39,6 +40,7 @@ import time
 from threading import Event, Lock
 
 from paho.mqtt import client as mqtt
+from telemetry_types import TelemetryMetrics, TelemetryPayload, TelemetryQuality
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -415,7 +417,7 @@ class ElectrolyserTwin:
             log.debug("[%s] Telemetry dropout active — skipping publish", self.el)
             return
 
-        ts = time.time()
+        now_iso = datetime.datetime.now(tz=datetime.UTC).isoformat()
         plant = "plant-A"
 
         def _pub(cn: str, topic: str, payload: dict) -> None:
@@ -427,53 +429,127 @@ class ElectrolyserTwin:
 
         # Cell voltages
         for i, v in enumerate(self.cell_voltages, start=1):
+            is_fault = (
+                (self.fault_injector.is_active(FAULT_MEMBRANE_PINHOLE) and i in (1, 2))
+                or (self.fault_injector.is_active(FAULT_CELL_FLOODING) and i in (3, 4))
+                or (self.fault_injector.is_active(FAULT_CELL_DRYOUT))
+                or (self.fault_injector.is_active(FAULT_VOLTAGE_SENSOR_DRIFT) and i == 5)
+            )
+            payload = TelemetryPayload(
+                ts=now_iso,
+                site_id=plant,
+                stack_id=self.el,
+                sensor_id=f"cell_{i}_voltage",
+                cell=i,
+                metrics=TelemetryMetrics(value=round(v, 4), unit="V"),
+                quality=TelemetryQuality(
+                    qos=1,
+                    status="FAULT" if is_fault else "OK",
+                    seq=self.seq,
+                ),
+                fault_active=is_fault,
+            ).to_dict()
             _pub(
                 f"sensor-{self.el}-cell_{i}_voltage",
                 f"electrolyser/{plant}/{self.el}/cell/{i}/voltage",
-                {"el": self.el, "sensor": f"cell_{i}_voltage", "cell": i,
-                 "unit": "V", "timestamp": ts, "value": round(v, 4), "sequence_id": self.seq},
+                payload,
             )
 
         # Stack-level sensors
         stack_readings = [
-            ("stack_current",     "stack/current",      "A",   self.I_stack),
-            ("stack_temperature", "stack/temperature",  "C",   self.stack_temp),
-            ("stack_pressure",    "stack/pressure",     "bar", self.stack_pressure),
+            ("stack_current",     "stack/current",      "A",   self.I_stack,
+             self.fault_injector.is_active(FAULT_DCDC_FAILURE) or self.fault_injector.is_active(FAULT_SOLAR_TRANSIENT) or self.fault_injector.is_active(FAULT_LOOSE_BOLT)),
+            ("stack_temperature", "stack/temperature",  "C",   self.stack_temp,
+             self.fault_injector.is_active(FAULT_TEMP_SENSOR_FAILURE) or self.fault_injector.is_active(FAULT_CELL_DRYOUT)),
+            ("stack_pressure",    "stack/pressure",     "bar", self.stack_pressure,
+             self.fault_injector.is_active(FAULT_O2_BLOCKAGE) or self.fault_injector.is_active(FAULT_OVER_PRESSURE)),
         ]
-        for sensor_name, path, unit, val in stack_readings:
+        for sensor_name, path, unit, val, is_fault in stack_readings:
+            payload = TelemetryPayload(
+                ts=now_iso,
+                site_id=plant,
+                stack_id=self.el,
+                sensor_id=sensor_name,
+                metrics=TelemetryMetrics(value=round(val, 3), unit=unit),
+                quality=TelemetryQuality(
+                    qos=1,
+                    status="FAULT" if is_fault else "OK",
+                    seq=self.seq,
+                ),
+                fault_active=is_fault,
+            ).to_dict()
             _pub(
                 f"sensor-{self.el}-{sensor_name}",
                 f"electrolyser/{plant}/{self.el}/{path}",
-                {"el": self.el, "sensor": sensor_name, "unit": unit,
-                 "timestamp": ts, "value": round(val, 3), "sequence_id": self.seq},
+                payload,
             )
 
         # Gas flow sensors
-        for sensor_name, gas, val in [
-            ("h2_flow_rate", "h2", self.h2_flow_Lpm),
-            ("o2_flow_rate", "o2", self.o2_flow_Lpm),
+        for sensor_name, gas, val, is_fault in [
+            ("h2_flow_rate", "h2", self.h2_flow_Lpm,
+             self.fault_injector.is_active(FAULT_MEMBRANE_PINHOLE) or self.fault_injector.is_active(FAULT_GAS_CROSSOVER)),
+            ("o2_flow_rate", "o2", self.o2_flow_Lpm,
+             self.fault_injector.is_active(FAULT_GAS_CROSSOVER) or self.fault_injector.is_active(FAULT_O2_BLOCKAGE)),
         ]:
+            payload = TelemetryPayload(
+                ts=now_iso,
+                site_id=plant,
+                stack_id=self.el,
+                sensor_id=sensor_name,
+                metrics=TelemetryMetrics(value=round(val, 4), unit="L/min"),
+                quality=TelemetryQuality(
+                    qos=1,
+                    status="FAULT" if is_fault else "OK",
+                    seq=self.seq,
+                ),
+                fault_active=is_fault,
+            ).to_dict()
             _pub(
                 f"sensor-{self.el}-{sensor_name}",
                 f"electrolyser/{plant}/{self.el}/{gas}/flow_rate",
-                {"el": self.el, "sensor": sensor_name, "unit": "L/min",
-                 "timestamp": ts, "value": round(val, 4), "sequence_id": self.seq},
+                payload,
             )
 
         # Tank pressure
+        is_tp_fault = self.fault_injector.is_active(FAULT_LEVEL_SENSOR) or self.fault_injector.is_active(FAULT_OVER_PRESSURE)
+        payload = TelemetryPayload(
+            ts=now_iso,
+            site_id=plant,
+            stack_id=self.el,
+            sensor_id="tank_pressure",
+            metrics=TelemetryMetrics(value=round(self.tank_pressure_bar, 4), unit="bar"),
+            quality=TelemetryQuality(
+                qos=1,
+                status="FAULT" if is_tp_fault else "OK",
+                seq=self.seq,
+            ),
+            fault_active=is_tp_fault,
+        ).to_dict()
         _pub(
             f"sensor-{self.el}-tank_pressure",
             f"electrolyser/{plant}/{self.el}/tank/pressure",
-            {"el": self.el, "sensor": "tank_pressure", "unit": "bar",
-             "timestamp": ts, "value": round(self.tank_pressure_bar, 4), "sequence_id": self.seq},
+            payload,
         )
 
         # Water flow
+        is_wf_fault = self.fault_injector.is_active(FAULT_PUMP_FAILURE)
+        payload = TelemetryPayload(
+            ts=now_iso,
+            site_id=plant,
+            stack_id=self.el,
+            sensor_id="water_flow",
+            metrics=TelemetryMetrics(value=round(self.water_flow, 3), unit="L/min"),
+            quality=TelemetryQuality(
+                qos=1,
+                status="FAULT" if is_wf_fault else "OK",
+                seq=self.seq,
+            ),
+            fault_active=is_wf_fault,
+        ).to_dict()
         _pub(
             f"sensor-{self.el}-water_flow",
             f"electrolyser/{plant}/{self.el}/water_flow",
-            {"el": self.el, "sensor": "water_flow", "unit": "L/min",
-             "timestamp": ts, "value": round(self.water_flow, 3), "sequence_id": self.seq},
+            payload,
         )
 
         # Status
@@ -483,7 +559,7 @@ class ElectrolyserTwin:
             status_cn,
             f"electrolyser/{plant}/{self.el}/status",
             {k: v for k, v in {
-                "el": self.el, "timestamp": ts,
+                "el": self.el, "stack_id": self.el, "site_id": plant, "timestamp": time.time(), "ts": now_iso,
                 "status": "TRIPPED" if self.tripped else "OPERATIONAL",
                 "reason": self.trip_reason if self.tripped else None,
                 "active_faults": active_faults if active_faults else None,
@@ -580,13 +656,19 @@ class PlantSimulator:
             self.irradiance[1] += 300.0
 
     def publish_irradiance(self) -> None:
-        ts = time.time()
+        now_iso = datetime.datetime.now(tz=datetime.UTC).isoformat()
         for i, c in self.irr_clients.items():
-            _publish_json(c, f"electrolyser/plant-A/irradiance/{i}", {
-                "el": "PLANT", "sensor": f"irradiance_{i}", "unit": "W/m2",
-                "timestamp": ts, "value": round(self.irradiance[i], 2),
-                "sequence_id": int(self.t),
-            })
+            is_fault = self.electrolysers["EL1"].fault_injector.is_active(FAULT_IRRADIANCE_DRIFT) and i == 1
+            payload = TelemetryPayload(
+                ts=now_iso,
+                site_id="plant-A",
+                stack_id="PLANT",
+                sensor_id=f"irradiance_{i}",
+                metrics=TelemetryMetrics(value=round(self.irradiance[i], 2), unit="W/m2"),
+                quality=TelemetryQuality(qos=1, status="FAULT" if is_fault else "OK", seq=int(self.t)),
+                fault_active=is_fault,
+            ).to_dict()
+            _publish_json(c, f"electrolyser/plant-A/irradiance/{i}", payload)
 
     # ── Fault control ─────────────────────────────────────────────────────
     def on_control_message(

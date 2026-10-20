@@ -66,11 +66,19 @@ class FaultTester:
 
     def on_message(self, client: mqtt.Client, userdata: object, msg: mqtt.MQTTMessage) -> None:
         try:
-            payload = json.loads(msg.payload)
+            raw = msg.payload.decode("utf-8") if isinstance(msg.payload, bytes) else msg.payload
+            payload = json.loads(raw)
+            if isinstance(payload, dict):
+                if "metrics" in payload and isinstance(payload["metrics"], dict) and "value" in payload["metrics"]:
+                    payload["value"] = payload["metrics"]["value"]
+                if "stack_id" in payload:
+                    payload["el"] = payload["stack_id"]
+                if "sensor_id" in payload:
+                    payload["sensor"] = payload["sensor_id"]
             topic = msg.topic
             self.received_messages[topic] = payload
             self.history.setdefault(topic, []).append(payload)
-        except (json.JSONDecodeError, Exception) as exc:
+        except (json.JSONDecodeError, UnicodeDecodeError, Exception) as exc:
             log.debug("on_message parse error: %s", exc)
 
     def inject_fault(self, el: str, fault_name: str, active: bool = True) -> None:

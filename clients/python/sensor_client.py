@@ -19,6 +19,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import logging
 import pathlib
@@ -27,6 +28,7 @@ import ssl
 import time
 
 from paho.mqtt import client as mqtt
+from telemetry_types import TelemetryMetrics, TelemetryPayload, TelemetryQuality
 
 logging.basicConfig(
     level=logging.INFO,
@@ -126,18 +128,16 @@ def main() -> None:
     try:
         while True:
             value = generate_value(args.el, args.sensor)
-            payload: dict = {
-                "el":          args.el,
-                "sensor":      args.sensor,
-                "unit":        args.unit,
-                "timestamp":   time.time(),
-                "value":       value,
-                "sequence_id": seq,
-            }
-            if args.cell is not None:
-                payload["cell"] = args.cell
-            # Drop None values
-            payload = {k: v for k, v in payload.items() if v is not None}
+            now_iso = datetime.datetime.now(tz=datetime.UTC).isoformat()
+            payload = TelemetryPayload(
+                ts=now_iso,
+                site_id="plant-A",
+                stack_id=args.el,
+                sensor_id=args.sensor,
+                cell=args.cell,
+                metrics=TelemetryMetrics(value=value, unit=args.unit or "unknown"),
+                quality=TelemetryQuality(qos=1, status="OK", seq=seq),
+            ).to_dict()
 
             client.publish(topic, json.dumps(payload), qos=1)
             log.debug("%s → %s → %.4f", args.cn, topic, value)

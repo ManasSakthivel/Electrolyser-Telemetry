@@ -37,6 +37,7 @@ Requirements
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import logging
 import math
@@ -282,16 +283,35 @@ class TelemetryCollector:
         self._fault_labels: dict[str, str] = {"EL1": "normal", "EL2": "normal"}
         self._ts: dict[str, float] = {"EL1": 0.0, "EL2": 0.0}
 
-    def handle_message(self, topic: str, raw: bytes) -> None:
+    def handle_message(self, topic: str, raw: bytes | str) -> None:
         try:
-            msg = json.loads(raw)
-        except json.JSONDecodeError:
+            if isinstance(raw, bytes):
+                msg = json.loads(raw.decode("utf-8"))
+            else:
+                msg = json.loads(raw)
+        except (json.JSONDecodeError, UnicodeDecodeError):
             return
 
-        el     = msg.get("el")
-        sensor = msg.get("sensor", "")
-        value  = msg.get("value")
-        ts     = msg.get("timestamp", time.time())
+        el = msg.get("stack_id") or msg.get("el")
+        sensor = msg.get("sensor_id") or msg.get("sensor", "")
+
+        metrics = msg.get("metrics")
+        if isinstance(metrics, dict) and "value" in metrics:
+            value = metrics["value"]
+        else:
+            value = msg.get("value")
+
+        ts_raw = msg.get("ts") or msg.get("timestamp")
+        if isinstance(ts_raw, str):
+            try:
+                dt = datetime.datetime.fromisoformat(ts_raw)
+                ts = dt.timestamp()
+            except ValueError:
+                ts = time.time()
+        elif isinstance(ts_raw, (int, float)):
+            ts = float(ts_raw)
+        else:
+            ts = time.time()
 
         if topic.endswith("/status") and el in ("EL1", "EL2"):
             faults = msg.get("active_faults") or []
