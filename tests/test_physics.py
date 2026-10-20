@@ -300,7 +300,7 @@ class TestTelemetrySchema:
         import datetime
         schema, validate = self._schema()
         payload = {
-            "ts":        datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+            "ts":        datetime.datetime.now(tz=datetime.UTC).isoformat(),
             "site_id":   "rvce-plant-A",
             "stack_id":  "EL1",
             "sensor_id": "cell_1_voltage",
