@@ -5,7 +5,7 @@ SHELL := /bin/bash
 BOLD  := $(shell tput bold 2>/dev/null || echo "")
 RESET := $(shell tput sgr0 2>/dev/null || echo "")
 
-.PHONY: help setup ca broker clients acl up down logs sim test lint export export-synthetic benchmark benchmark-bridge validate-physics leadtime-experiment ablation notebook pipeline clean
+.PHONY: help setup ca broker clients acl up init-pwfile down logs sim test lint export export-synthetic benchmark benchmark-bridge validate-physics leadtime-experiment ablation notebook pipeline clean
 
 help:
 	@echo ""
@@ -18,6 +18,7 @@ help:
 	@echo "  $(BOLD)acl$(RESET)                 Regenerate mosquitto ACL file"
 	@echo ""
 	@echo "  $(BOLD)up$(RESET)                  Start full Docker stack (broker + influx + telegraf + grafana)"
+	@echo "  $(BOLD)init-pwfile$(RESET)         Add WebSocket viewer (ws_viewer) to Mosquitto password file (run once after 'make up')"
 	@echo "  $(BOLD)down$(RESET)                Stop Docker stack"
 	@echo "  $(BOLD)logs$(RESET)                Tail logs from all containers"
 	@echo ""
@@ -69,6 +70,11 @@ up:
 	@if [ ! -f .env ]; then \
 	  echo "$(BOLD)ERROR:$(RESET) .env not found. Copy .env.example → .env and fill in secrets."; exit 1; fi
 	docker compose up -d --remove-orphans
+
+init-pwfile:
+	@if [ ! -f .env ]; then \
+	  echo "$(BOLD)ERROR:$(RESET) .env not found. Copy .env.example → .env and fill in secrets."; exit 1; fi
+	set -a; . ./.env; set +a; ./scripts/init-pwfile.sh
 
 down:
 	docker compose down

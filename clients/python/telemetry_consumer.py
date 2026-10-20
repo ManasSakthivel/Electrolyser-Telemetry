@@ -149,14 +149,14 @@ class TelemetryConsumer:
         """Stop background network loop and disconnect cleanly."""
         with self._lock:
             self.state = ConsumerState.STOPPED
-            if self._client:
-                try:
-                    self._client.loop_stop()
-                    self._client.disconnect()
-                except Exception as exc:
-                    log.debug("Error during disconnect: %s", exc)
-                finally:
-                    self._client = None
+            client = self._client
+            self._client = None
+        if client:
+            try:
+                client.loop_stop()
+                client.disconnect()
+            except Exception as exc:
+                log.debug("Error during disconnect: %s", exc)
 
     # ── MQTT Callbacks ─────────────────────────────────────────────────────────
     def _on_connect(self, client: mqtt.Client, userdata: object, flags: dict, reason_code: object, properties: object = None) -> None:

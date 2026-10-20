@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: Electrolyser Telemetry
+    orgId: 1
+    folder: Electrolyser
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

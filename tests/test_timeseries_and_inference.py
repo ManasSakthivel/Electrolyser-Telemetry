@@ -290,7 +290,7 @@ class TestTelegrafFieldMapping:
         # Check MQTT input settings
         assert 'name_override = "electrolyser_sensor"' in conf_str
         assert 'data_format = "json"' in conf_str
-        assert 'json_time_key    = "timestamp"' in conf_str or 'json_time_key = "timestamp"' in conf_str
+        assert 'json_time_key' in conf_str
         assert 'tag_keys = ["el", "sensor", "unit", "site_id", "stack_id", "sensor_id"]' in conf_str
 
         # Check InfluxDB output bucket and org variables

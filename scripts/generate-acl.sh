@@ -10,7 +10,7 @@ if [ -f "$ACLFILE" ]; then
   cp "$ACLFILE" "$ACLFILE.bak.$(date +%s)"
 fi
 
-echo "# Auto-generated ACL entries - keep above this line" >> "$ACLFILE"
+echo "# Auto-generated ACL entries - keep above this line" > "$ACLFILE"
 echo "# Generated at: $(date -u)" >> "$ACLFILE"
 
 # per-electrolyser sensors
@@ -63,6 +63,9 @@ user monitor-local
 topic read electrolyser/#
 topic write electrolyser/control/faults
 topic write electrolyser/plant-A/_benchmark/latency
+
+user ws_viewer
+topic read electrolyser/plant-A/#
 EOF
 
 chmod 700 "$ACLFILE"

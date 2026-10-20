@@ -57,12 +57,18 @@ build/
 
 # Grafana / Influx runtime volumes
 influxdb/
-grafana/
+grafana/data/
+# Track Grafana provisioning configs
+!grafana/provisioning/
+!grafana/provisioning/**
+!grafana/dashboards/
+!grafana/dashboards/**
 volumes/
 
 # Environment and secrets
 .env
 .env.*
+!.env.example
 *.token
 *.pem
 *.crt
