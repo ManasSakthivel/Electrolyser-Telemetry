@@ -77,6 +77,28 @@ FEATURES = [
     "irradiance_1", "irradiance_2",
 ]
 
+ENGINEERED = [
+    "cell_voltage_max", "cell_voltage_min", "cell_voltage_std", "cell_voltage_range",
+    "h2_o2_ratio", "faradaic_efficiency", "stack_power", "thermal_load", "tank_fill_proxy",
+]
+
+ALL_FEATURES = FEATURES + ENGINEERED
+
+
+def _engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    cell_cols = [f"cell_{i}_voltage" for i in range(1, 6)]
+    df["cell_voltage_max"]   = df[cell_cols].max(axis=1)
+    df["cell_voltage_min"]   = df[cell_cols].min(axis=1)
+    df["cell_voltage_std"]   = df[cell_cols].std(axis=1)
+    df["cell_voltage_range"] = df["cell_voltage_max"] - df["cell_voltage_min"]
+    df["h2_o2_ratio"]        = df["h2_flow_rate"] / (df["o2_flow_rate"] + 1e-9)
+    df["faradaic_efficiency"]= df["h2_flow_rate"] / (df["stack_current"] + 1e-9)
+    df["stack_power"]        = df["stack_current"] * df["cell_voltage_max"] * 5
+    df["thermal_load"]       = df["stack_temperature"] / (df["water_flow"] + 1e-3)
+    df["tank_fill_proxy"]    = df["tank_pressure"] * df["h2_flow_rate"]
+    return df
+
 # Hard-coded threshold-based alarm rules (mirrors safety checks in plant_sim.py)
 ALARM_RULES: dict[str, callable] = {
     "cell_dryout":          lambda r: any(r.get(f"cell_{i}_voltage", 0) > 2.2 for i in range(1, 6)),
@@ -241,7 +263,13 @@ def _detection_tick(model: LSTMAutoencoder, scaler: StandardScaler,
                     window: int = 30) -> int | None:
     """Return the first tick (row index) where LSTM reconstruction error > threshold."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    X = scaler.transform(pd.DataFrame(rows)[FEATURES].fillna(0).values.astype(np.float32))
+    df = pd.DataFrame(rows)
+    if getattr(scaler, "n_features_in_", len(FEATURES)) == len(ALL_FEATURES):
+        df = _engineer_features(df)
+        cols = ALL_FEATURES
+    else:
+        cols = FEATURES
+    X = scaler.transform(df[cols].fillna(0).astype(np.float32))
     model.eval()
     with torch.no_grad():
         for i in range(window - 1, len(X)):
@@ -277,7 +305,7 @@ def run_experiment(n_normal: int = 300, n_fault: int = 300,
     r_ohm = max(0.25, random.gauss(0.4, 0.06))
     eta_f = random.uniform(0.90, 0.98)
     normal_rows = [_make_row(k, fault=None, r_ohm=r_ohm, eta_f=eta_f) for k in range(2000)]
-    X_normal_df = pd.DataFrame(normal_rows)[FEATURES].fillna(0)
+    X_normal_df = _engineer_features(pd.DataFrame(normal_rows))[ALL_FEATURES].fillna(0)
 
     scaler   = StandardScaler()
     X_normal = scaler.fit_transform(X_normal_df.values.astype(np.float32))
