@@ -70,7 +70,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pandas pyarrow scikit-learn matplotlib seaborn numpy torch shap \
-                      jupyter nbconvert scipy
+                      jupyter nbconvert scipy paho-mqtt
       - name: Generate synthetic dataset
         run: |
           python scripts/export_dataset.py --synthetic --rows 60 --out data/telemetry_labelled.parquet
